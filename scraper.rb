@@ -15,4 +15,14 @@ categories = depts.map { |d| "#{cddu} por #{d}" } + [cddu]
 
 en_names = WikiData::Category.new('Category:Members of the Chamber of Deputies of Uruguay', 'en').member_titles
 es_names = categories.flat_map { |c| WikiData::Category.new(c, 'es').member_titles }.uniq
-EveryPolitician::Wikidata.scrape_wikidata(names: { es: es_names, en: en_names })
+
+query = <<SPARQL
+  SELECT DISTINCT ?item WHERE {
+    ?item p:P39 [ ps:P39 wd:Q19930720 ; pq:P2937 ?term ] .
+    ?term p:P31/pq:P1545 ?ordinal .
+    FILTER (xsd:integer(?ordinal) >= 48)
+  }
+SPARQL
+p39s = EveryPolitician::Wikidata.sparql(query)
+
+EveryPolitician::Wikidata.scrape_wikidata(ids: p39s, names: { es: es_names, en: en_names })
